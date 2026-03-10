@@ -216,7 +216,7 @@ install_cron_updater() {
 }
 
 main() {
-  local repo_url_default="https://github.com/USERNAME/maro-run.git"
+  local repo_url_default="git@github.com:whitehai11/maro.run.git"
   local project_dir_default="/opt/maro-run"
   local branch_default="main"
 
