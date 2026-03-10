@@ -70,13 +70,30 @@ prompt_input() {
   local prompt_text="$2"
   local default_value="$3"
   local value
+  local is_optional="false"
+
+  case "$var_name" in
+    GITHUB_WEBHOOK_SECRET)
+      is_optional="true"
+      ;;
+  esac
 
   while true; do
     if [[ -n "$default_value" ]]; then
-      read -r -p "$prompt_text [$default_value]: " value
-      value="${value:-$default_value}"
+      if ! read -r -p "$prompt_text [$default_value]: " value; then
+        value="$default_value"
+      else
+        value="${value:-$default_value}"
+      fi
     else
-      read -r -p "$prompt_text: " value
+      if ! read -r -p "$prompt_text: " value; then
+        if [[ "$is_optional" == "true" ]]; then
+          value=""
+        else
+          error "Input stream ended while reading: $var_name"
+          exit 1
+        fi
+      fi
     fi
 
     case "$var_name" in
@@ -92,9 +109,12 @@ prompt_input() {
         if is_valid_port "$value"; then break; fi
         warn "Invalid port. Must be 1-65535."
         ;;
-      POSTGRES_PASSWORD|REDIS_PASSWORD|GITHUB_WEBHOOK_SECRET)
+      POSTGRES_PASSWORD|REDIS_PASSWORD)
         if [[ -n "$value" ]]; then break; fi
         warn "Value cannot be empty."
+        ;;
+      GITHUB_WEBHOOK_SECRET)
+        break
         ;;
       *)
         if [[ -n "$value" ]]; then break; fi
